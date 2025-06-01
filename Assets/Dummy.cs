@@ -35,7 +35,7 @@ public class Dummy : MonoBehaviour, IDamageable
 
     public void TakeDamage(int damage)
     {
-        _renderer?.Blink(_originalMaterial, _blinkDuration);
+        _renderer?.Blink(_originalMaterial, _blinkDuration, BlinkType.Red);
         HelperMethods.PlaySfx(_hitSfxs?.GetRandom());
     }
 

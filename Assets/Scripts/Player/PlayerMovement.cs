@@ -7,10 +7,12 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] Rigidbody _rb;
+    [SerializeField] private PlayerAnimatorController _animatorController;
     [SerializeField] private Transform _mainCamera;
     [SerializeField] private InputActionReference _moveInput;
     [SerializeField] private float _speed, _angleOffset;
     [SerializeField] private bool _rotateToFaceCamera;
+    private readonly string _animatorParameter = "Movement";
     private Vector3 _movement;
     private Vector3 _camForwardVector;
     private Vector3 _camRightwardVector;
@@ -37,7 +39,15 @@ public class PlayerMovement : MonoBehaviour
         {
             _mainCamera = Camera.main.transform;
         }
-
+        
+        if (_animatorController == null)
+        {
+            _animatorController = GetComponent<PlayerAnimatorController>();
+            if (_animatorController == null)
+            {
+                Debug.LogError("PlayerAnimatorController component not found on this GameObject or its children.");
+            }
+        }
         if (_moveInput != null)
         {
             _moveInput.action.performed += StartMovement;
@@ -66,6 +76,7 @@ public class PlayerMovement : MonoBehaviour
     void StopMovement(InputAction.CallbackContext context)
     {
         _movement = Vector3.zero;
+        _animatorController?.PlayStated(PlayerAnimationsNames.IdleAnimHash);
         OnInputDetected?.Invoke(_movement);
     }
 
@@ -94,5 +105,6 @@ public class PlayerMovement : MonoBehaviour
         Vector3 finalPosition = transform.position + dir;
         OnMovement?.Invoke(dir);
         _rb.MovePosition(finalPosition);
+        _animatorController?.PlayStated(PlayerAnimationsNames.MoveAnimHash);
     }
 }

@@ -50,6 +50,7 @@ public static class ExtensionMethods
     //AUDIO STUFF
     public static void PlayWithVaryingPitch(this AudioSource audio, AudioClip clip, float startingPitch = 1f)
     {
+        if (audio == null || clip == null) return;
         float pitchOffset = Random.Range(-0.02f, 0.035f);
         audio.pitch = startingPitch + pitchOffset;
         audio.PlayOneShot(clip);

@@ -5,20 +5,39 @@ using UnityEngine;
 
 public class PlayerCombat : MonoBehaviour
 {
+    [Header("References")]
     [SerializeField] private PlayerAnimatorController _animator;
     [SerializeField] private PlayerMovement _movement;
     [SerializeField] private PlayerMovementListener _movementListener;
-    [SerializeField] private Transform _attackPoint;
+    
+    
+    [Header("Weapon Stats")]
     [SerializeField] private float _cooldown;
     [SerializeField] private float _attackRange;
     [SerializeField] private int _damage;
+    
+    [Header("Enemy detection")]
     [SerializeField] private LayerMask _enemyLayer;
-    [SerializeField] private AudioClip[] _attackSound;
+    
+    [Header("Attack point")]
+    [SerializeField] private Transform _attackPoint;
     [SerializeField] private bool _movePointWithMovement;
     [SerializeField] private float _maxPointDistance = 5f;
+    
+    [Header("Pull in effect")]
     [SerializeField] private float _pullDuration = 0.1f;
     [SerializeField,Range(0f,1f)] private float _pullInSpeed = 0.6f;
     [SerializeField] private CurveTypes _pullInCurve = CurveTypes.EaseInOutExpo;
+    
+    [Header("Sounds")]
+    [SerializeField] private AudioSource _audio;
+    [SerializeField] private AudioClip[] _attackSounds;
+
+    [Header("Other")] 
+    [SerializeField] private float _shakeDuration = 0.1f;
+    [SerializeField] private float _shakeStrength = 1f;
+    
+    
     private float _lastAttackTime;
     private Collider[] _hitColliders;
     private int _detectionCount;
@@ -70,7 +89,10 @@ public class PlayerCombat : MonoBehaviour
         if(Time.time <= _lastAttackTime) return;
         _lastAttackTime = Time.time + _cooldown;
         DetectEnemies();
+        _animator.PlayStated(PlayerAnimationsNames.AttackAnimHash, _cooldown - (Time.deltaTime * 5f), true);
+        _audio?.PlayWithVaryingPitch(_attackSounds?.GetRandom());
         OnAttack?.Invoke();
+        if (_detectionCount == 0) return;
         for (int i = 0; i < _detectionCount; i++)
         {
             var hitCollider = _hitColliders[i];
@@ -78,14 +100,18 @@ public class PlayerCombat : MonoBehaviour
             var enemy = hitCollider.GetComponent<IDamageable>();
             enemy?.TakeDamage(_damage); // Assuming TakeDamage method exists in Enemy class
         }
-        _animator.PlayStated(PlayerAnimationsNames.AttackAnimHash, _cooldown - Time.deltaTime, true);
-        HelperMethods.PlaySfx(_attackSound.GetRandom());
         PullPlayerToEnemy();
+        DoShake();
     }
 
     private void DetectEnemies()
     {
         _detectionCount = Physics.OverlapSphereNonAlloc(_attackPoint.position, _attackRange, _hitColliders, _enemyLayer);
+    }
+
+    private void DoShake()
+    {
+        CameraEffects.Shake(_shakeStrength, _shakeDuration);
     }
 
     private void PullPlayerToEnemy()

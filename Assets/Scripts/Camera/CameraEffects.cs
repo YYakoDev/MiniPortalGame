@@ -12,6 +12,7 @@ public class CameraEffects : MonoBehaviour
     static int _loops;
     static float _defaultSize, _startSize, _newSize, _scaleDuration;
     float _elapsedTime;
+    private static Vector3 _initialRot;
     static bool _scaling = false;
 
     private static float GetRandomShakeRange => Random.Range(-0.045f, 0.055f);
@@ -24,22 +25,19 @@ public class CameraEffects : MonoBehaviour
         _animator.ChangeTimeScalingUsage(TweenAnimator.TimeUsage.ScaledTime);
         _cameraTransform = _camera.transform;
         _initialPos = _cameraTransform.localPosition;
+        _initialRot = _cameraTransform.rotation.eulerAngles;
         _elapsedTime = 0f;
         _scaling = false;
     }
     public static void Shake(float strength, float duration = 0.021f)
     {
-        if(_animator.AnimationsQueued > 3) _animator.Clear();
-        int maxIterations = 6 + (int)(30f * duration);
-        Vector3 previousDir = _cameraTransform.localPosition;
-        for (int i = 0; i < maxIterations; i++)
+        var startPosition = _cameraTransform.position;
+        var currentRotation = _cameraTransform.rotation.eulerAngles;
+        HelperMethods.ScaledTimeTweenAnimator.TweenFloatValue(0f, 1f, duration, f =>
         {
-            var randomSign = Mathf.Sign(Random.Range(-1, 2));
-            var dir = GetNewDirection(1.5f * strength * randomSign);
-            var realDuration = (duration) / (float)maxIterations;
-            _animator.TweenTransformMoveTo(_cameraTransform, previousDir, dir, realDuration, CurveTypes.EaseInOut);
-            previousDir = dir;
-        }
+            var endPosition = new Vector3(_initialRot.x, _initialRot.y, Random.Range(-0.555f, 0.555f) * (1f - f) * strength);
+            _cameraTransform.rotation = Quaternion.Euler(endPosition);
+        }, CurveTypes.EaseInBounce);
     }
 
     private void Update() {
