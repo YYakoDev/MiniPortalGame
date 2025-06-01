@@ -14,26 +14,64 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 _movement;
     private Vector3 _camForwardVector;
     private Vector3 _camRightwardVector;
-
-
+    public event Action<Vector3> OnMovement, OnInputDetected; 
+    //properties
+    public Rigidbody Rb => _rb;
+    public InputActionReference MoveInput => _moveInput;
+    
     // Start is called before the first frame update
     void Start()
     {
-        
+        if (_rb == null)
+        {
+            _rb = GetComponent<Rigidbody>();
+            if (_rb == null)
+            {
+                Debug.LogError("Rigidbody component not found on this GameObject or its children.");
+                gameObject.SetActive(false);
+                return;
+            }
+        }
+
+        if (_mainCamera == null)
+        {
+            _mainCamera = Camera.main.transform;
+        }
+
+        if (_moveInput != null)
+        {
+            _moveInput.action.performed += StartMovement;
+            _moveInput.action.canceled += StopMovement;
+        }
     }
 
-    // Update is called once per frame
-    void Update()
+    private void OnDestroy()
     {
-        
-        _movement.x = Input.GetAxisRaw("Horizontal");
-        _movement.z = Input.GetAxisRaw("Vertical");
-        
+        if (_moveInput != null)
+        {
+            _moveInput.action.performed -= StartMovement;
+            _moveInput.action.canceled -= StopMovement;
+        }
+    }
 
+
+    void StartMovement(InputAction.CallbackContext context)
+    {
+        var input = context.ReadValue<Vector2>();
+        _movement.x = input.x;
+        _movement.z = input.y;
+        OnInputDetected?.Invoke(_movement);
+    }
+    
+    void StopMovement(InputAction.CallbackContext context)
+    {
+        _movement = Vector3.zero;
+        OnInputDetected?.Invoke(_movement);
     }
 
     private void FixedUpdate()
     {
+        if (!(_movement.sqrMagnitude > 0.1f)) return;
         _camForwardVector = _mainCamera.forward;
         _camRightwardVector = _mainCamera.right;
         _camForwardVector.y = 0;
@@ -41,24 +79,20 @@ public class PlayerMovement : MonoBehaviour
         _camForwardVector.Normalize();
         _camRightwardVector.Normalize();
 
-        if (_movement.sqrMagnitude > 0.1f)
-        {
-            Move();
-            if(_rotateToFaceCamera)
-            {
-                var sum = _camForwardVector + _camRightwardVector;
-
-                var angle = Mathf.Atan2(sum.x, sum.z) * Mathf.Rad2Deg + _angleOffset;
-                var newRotation = transform.rotation.eulerAngles;
-                newRotation.y = angle;
-                transform.rotation = Quaternion.Euler(newRotation);
-            }
-        }
+        Move();
+        if (!_rotateToFaceCamera) return;
+        var sum = _camForwardVector + _camRightwardVector;
+        var angle = Mathf.Atan2(sum.x, sum.z) * Mathf.Rad2Deg + _angleOffset;
+        var newRotation = transform.rotation.eulerAngles;
+        newRotation.y = angle;
+        transform.rotation = Quaternion.Euler(newRotation);
     }
 
     void Move()
     {
-        Vector3 direction = transform.position + (_camForwardVector * _movement.z + _camRightwardVector * _movement.x) * (Time.deltaTime * _speed); 
-        _rb.MovePosition(direction);
+        Vector3 dir = (_camForwardVector * _movement.z + _camRightwardVector * _movement.x) * (Time.fixedDeltaTime * _speed);
+        Vector3 finalPosition = transform.position + dir;
+        OnMovement?.Invoke(dir);
+        _rb.MovePosition(finalPosition);
     }
 }

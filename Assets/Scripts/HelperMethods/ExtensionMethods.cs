@@ -305,4 +305,72 @@ public static class ExtensionMethods
         int randomIndex = Random.Range(0, array.Length);
         return array[randomIndex];
     }
+    
+    private static Material _whiteBlinkMat, _redBlinkMat;
+    public static Material WhiteBlinkMat
+    {
+        get
+        {
+            if (_whiteBlinkMat != null) return _whiteBlinkMat;
+            _whiteBlinkMat = Resources.Load<Material>("Materials/WhiteBlinkMaterial");
+            return _whiteBlinkMat;
+        }
+    }
+    public static Material RedBlinkMat
+    {
+        get
+        {
+            if (_redBlinkMat != null) return _redBlinkMat;
+            _redBlinkMat = Resources.Load<Material>("Materials/RedBlinkMaterial");
+            return _redBlinkMat;
+        }
+    }
+    
+    public static void Blink(this SpriteRenderer renderer, float duration = 0.1f, BlinkType blinkType = BlinkType.White)
+    {
+        if (renderer == null) return;
+        
+       
+        var originalMaterial = IsBlinkMat(renderer.material) ? renderer.material : new Material(Shader.Find("Standard"));
+        Blink(renderer, originalMaterial, duration, blinkType);
+        return;
+
+        bool IsBlinkMat(Material mat)
+        {
+            var result = blinkType switch
+            {
+                BlinkType.White => mat == WhiteBlinkMat,
+                BlinkType.Red => mat == RedBlinkMat,
+                _ => false
+            };
+            return result;
+        }
+    }
+
+    public static void Blink(this SpriteRenderer renderer, Material originalMat, float duration = 0.1f, BlinkType blinkType = BlinkType.White)
+    {
+        var blinkMat = blinkType switch
+        {
+            BlinkType.White => WhiteBlinkMat,
+            BlinkType.Red => RedBlinkMat,
+            _ => WhiteBlinkMat
+        };
+        if (blinkMat == null)
+        {
+            Debug.LogError("Blink material not found. Make sure the material is in the Resources folder.");
+            return;
+        }
+        renderer.material = blinkMat;
+        YYExtensions.Instance.ExecuteMethodAfterTime(duration, () =>
+        {
+            if (renderer == null) return;
+            renderer.material = originalMat;
+        });
+    }
+}
+
+public enum BlinkType
+{
+    White,
+    Red
 }

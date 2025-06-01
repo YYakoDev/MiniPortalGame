@@ -66,7 +66,7 @@ public static class HelperMethods
         var audioSource = GetAudioSource();
         audioSource.PlayOneShot(clip);
     }
-
+    
 
 
     /*private static readonly Dictionary<float, WaitForSeconds> WaitDictionary = new();
@@ -205,4 +205,52 @@ public static class HelperMethods
         float num2 = y - centerVector.y;
         return Mathf.Sqrt(num1 * num1 + num2 * num2);
     }
+    
+    public static Collider GetClosestCollider(Vector3 position, float radius, LayerMask layer)
+    {
+        var results = Physics.OverlapSphere(position, radius, layer);
+        return results.Length == 0 ? null : GetClosestCollider(results, position);
+    }
+
+    public static Collider GetClosestCollider(Collider[] hitColliders, Vector3 position)
+    {
+        return GetClosestCollider(hitColliders, position, hitColliders.Length);
+    }
+    public static Collider GetClosestCollider(Collider[] hitColliders, Vector3 position, int length)
+    {
+        var closestDistance = 500f;
+        Collider closestTarget = null;
+        for (int i = 0; i < length; i++)
+        {
+            var collider = hitColliders[i];
+            if (collider == null) continue;
+            var distance = Vector3.Distance(position, collider.transform.position);
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closestTarget = collider;
+            }
+        }
+
+        return closestTarget;
+    }
+
+    static Vector2 _screenCenter = Vector2.zero;
+    static Vector2 ScreenCenter
+    {
+        get
+        {
+            if (_screenCenter == Vector2.zero)
+            {
+                _screenCenter.x = Screen.width / 2f;
+                _screenCenter.y = Screen.height / 2f;
+            }
+            return _screenCenter;
+        }
+    }
+    public static Vector2 GetScreenCenter()
+    {
+        return ScreenCenter;
+    }
+    
 }
