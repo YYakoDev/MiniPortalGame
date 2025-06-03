@@ -127,10 +127,10 @@ public class YYExtensions : MonoBehaviour
         AddEventToTimer(GetTimerIndex(animDuration), onComplete);
     }
 
-    public Timer ExecuteMethodAfterTime(float time, Action onComplete, bool resetOnZero = false)
+    public Timer ExecuteMethodAfterTime(float time, Action onComplete, bool resetOnZero = false, bool useUnscaledTime = false)
     {
         var timerIndex = GetTimerIndex(time);
-        AddEventToTimer(timerIndex, onComplete, resetOnZero);
+        AddEventToTimer(timerIndex, onComplete, resetOnZero, useUnscaledTime);
         return _animationsTimers[timerIndex];
     }
 
@@ -144,11 +144,12 @@ public class YYExtensions : MonoBehaviour
         }
     }
 
-    void AddEventToTimer(int timerIndex, Action onComplete, bool resetOnZero = false)
+    void AddEventToTimer(int timerIndex, Action onComplete, bool resetOnZero = false, bool useUnscaledTime = false)
     {
         Action onTimerEndAction = resetOnZero ? onComplete : onComplete + RemoveEvent;
         _animationsTimers[timerIndex].ResetOnZero(resetOnZero);
         _animationsTimers[timerIndex].onEnd += onTimerEndAction;
+        _animationsTimers[timerIndex].SetUnscaledTime(useUnscaledTime);
         void RemoveEvent()
         {
             _timersAvailability[timerIndex] = false;

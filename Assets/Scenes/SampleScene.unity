@@ -1383,8 +1383,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8523b8f7652b24a49b056d37725b6359, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _movement: {fileID: 0}
-  _spriteRenderer: {fileID: 0}
+  _movement: {fileID: 1447802715}
+  _spriteRenderer: {fileID: 1447802710}
 --- !u!95 &1447802717
 Animator:
   serializedVersion: 5
@@ -2006,6 +2006,7 @@ MonoBehaviour:
   _animator: {fileID: 1447802718}
   _movement: {fileID: 1447802715}
   _movementListener: {fileID: 1447802716}
+  _attackInput: {fileID: -2831406729901597417, guid: 61191ed77427b53409bdf36e92a01c20, type: 3}
   _cooldown: 0.4
   _attackRange: 1.45
   _damage: 5
@@ -2021,8 +2022,11 @@ MonoBehaviour:
   _audio: {fileID: 1934810218}
   _attackSounds:
   - {fileID: 8300000, guid: f0186925e88688f468bf6ff11da1ec23, type: 3}
-  _shakeDuration: 0.2
-  _shakeStrength: 3.5
+  _shakeDuration: 0.15
+  _shakeStrength: 4
+  _freezeTime: 1
+  _freezeDuration: 0.02
+  _attackDelay: 0.1
 --- !u!82 &1934810218
 AudioSource:
   m_ObjectHideFlags: 0

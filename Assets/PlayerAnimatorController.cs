@@ -79,8 +79,7 @@ public class PlayerAnimatorController : MonoBehaviour
     public void SetParameter(string parameterName, float value)
     {
         if (_animator == null) return;
-        int hash = Animator.StringToHash(parameterName);
-        _animator.SetFloat(hash, value);
+        _animator.SetFloat(parameterName, value);
     }
 }
 

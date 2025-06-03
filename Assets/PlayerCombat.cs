@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerCombat : MonoBehaviour
 {
@@ -9,7 +10,7 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private PlayerAnimatorController _animator;
     [SerializeField] private PlayerMovement _movement;
     [SerializeField] private PlayerMovementListener _movementListener;
-    
+    [SerializeField] private InputActionReference _attackInput;
     
     [Header("Weapon Stats")]
     [SerializeField] private float _cooldown;
@@ -36,7 +37,9 @@ public class PlayerCombat : MonoBehaviour
     [Header("Other")] 
     [SerializeField] private float _shakeDuration = 0.1f;
     [SerializeField] private float _shakeStrength = 1f;
-    
+    [SerializeField] private bool _freezeTime = true;
+    [SerializeField] private float _freezeDuration = 0.02f;
+    [SerializeField] private float _attackDelay = 0.1f;
     
     private float _lastAttackTime;
     private Collider[] _hitColliders;
@@ -66,24 +69,20 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
         _movement.OnMovement += MoveAttackPoint;
+        _attackInput.action.performed += Attack;
         _hitColliders = new Collider[20];
         _startPosition = _attackPoint.localPosition;
     }
 
     // Update is called once per frame
-    void Update()
-    {
-        if(Input.GetMouseButtonDown(0))
-        {
-            Attack();
-        }
-    }
 
     private void OnDestroy()
     {
+        _attackInput.action.performed -= Attack;
         if (_movement != null) _movement.OnMovement -= MoveAttackPoint;
     }
 
+    private void Attack(InputAction.CallbackContext ctx) => Attack();
     private void Attack()
     {
         if(Time.time <= _lastAttackTime) return;
@@ -98,10 +97,15 @@ public class PlayerCombat : MonoBehaviour
             var hitCollider = _hitColliders[i];
             if (hitCollider == null) continue;
             var enemy = hitCollider.GetComponent<IDamageable>();
-            enemy?.TakeDamage(_damage); // Assuming TakeDamage method exists in Enemy class
+            YYExtensions.Instance.ExecuteMethodAfterTime(_attackDelay, () =>
+            {
+                enemy?.TakeDamage(_damage);
+            });
         }
         PullPlayerToEnemy();
-        DoShake();
+        //FreezeTime();
+        YYExtensions.Instance.ExecuteMethodAfterTime(_attackDelay, DoShake);
+        YYExtensions.Instance.ExecuteMethodAfterTime(_attackDelay, FreezeTime, useUnscaledTime:true);
     }
 
     private void DetectEnemies()
@@ -112,6 +116,18 @@ public class PlayerCombat : MonoBehaviour
     private void DoShake()
     {
         CameraEffects.Shake(_shakeStrength, _shakeDuration);
+    }
+
+    private void FreezeTime()
+    {
+        if (!_freezeTime) return;
+        Time.timeScale = 0f;
+        YYExtensions.Instance.ExecuteMethodAfterTime(_freezeDuration, UnfreezeTime, useUnscaledTime:true);
+        
+        void UnfreezeTime()
+        {
+            Time.timeScale = 1f;
+        }
     }
 
     private void PullPlayerToEnemy()

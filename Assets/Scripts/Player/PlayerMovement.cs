@@ -105,6 +105,7 @@ public class PlayerMovement : MonoBehaviour
         Vector3 finalPosition = transform.position + dir;
         OnMovement?.Invoke(dir);
         _rb.MovePosition(finalPosition);
+        _animatorController?.SetParameter(_animatorParameter, _movement.z);
         _animatorController?.PlayStated(PlayerAnimationsNames.MoveAnimHash);
     }
 }
